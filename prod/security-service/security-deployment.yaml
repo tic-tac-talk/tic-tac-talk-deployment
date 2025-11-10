@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: security
+  template:
+    metadata:
+      labels:
+        app: security
+    spec:
+      serviceAccountName: spring-security-sa
+      securityContext:
+        fsGroup: 2000
+      nodeSelector:
+        kubernetes.io/hostname: worker01
+      containers:
+        - name: security-container
+          image: leesy010504/ttt-security:0.0.1
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            - name: SPRING_CLOUD_KUBERNETES_CONFIG_FAIL_FAST
+              value: "true"
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_CONTEXT_CONFIG
+              value: "DEBUG"
+            - name: SPRING_CONFIG_IMPORT
+              value: "kubernetes:,kubernetes:secrets"
+            - name: SPRING_CLOUD_KUBERNETES_CONFIG_NAME
+              value: "security-config"
+            - name: SPRING_APPLICATION_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: SPRING_APPLICATION_JSON
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 150
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3

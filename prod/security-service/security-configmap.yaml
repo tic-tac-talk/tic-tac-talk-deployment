@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-config
+  namespace: prod
+  labels:
+    app: security-service
+    env: prod
+data:
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  DB_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+  DB_URL: "jdbc:postgresql://postgres-service:5432/main"
+  DB_USERNAME: "root"
+  KAKAO_REDIRECT_URI: "https://tic-tac-talk.kro.kr/login/oauth2/code/kakao"
+  SERVER_PORT: "8081"
+
+
