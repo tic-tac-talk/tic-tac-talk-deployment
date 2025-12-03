@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: security-deployment
+  name: voice-deployment
   namespace: prod
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: security-service
+      app: voice-service
   template:
     metadata:
       labels:
-        app: security-service
+        app: voice-service
     spec:
-      serviceAccountName: security-sa
+      serviceAccountName: voice-sa
       securityContext:
         fsGroup: 2000
       containers:
-        - name: security-container
-          image: leesy010504/ttt-security:latest
+        - name: voice-container
+          image: leesy010504/ttt-voice:latest
           resources:
             requests:
               cpu: 300m
@@ -36,9 +36,9 @@ spec:
             - name: SPRING_CONFIG_IMPORT
               value: "kubernetes:,kubernetes:secrets"
             - name: SPRING_CLOUD_KUBERNETES_CONFIG_NAME
-              value: "security-config"
+              value: "voice-config"
           envFrom:
             - secretRef:
-                name: security-secret
+                name: voice-secret
           ports:
             - containerPort: 8080

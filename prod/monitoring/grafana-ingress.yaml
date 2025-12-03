@@ -1,0 +1,13 @@
+grafana:
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - grafana.tictactalk.studio
+    paths:
+      - /
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.tictactalk.studio
+

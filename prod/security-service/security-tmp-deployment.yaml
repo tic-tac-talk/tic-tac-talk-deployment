@@ -1,0 +1,95 @@
+# security-service/security-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: security-service
+  template:
+    metadata:
+      labels:
+        app: security-service
+    spec:
+      serviceAccountName: security-sa
+      securityContext:
+        fsGroup: 2000
+      nodeSelector:
+        kubernetes.io/hostname: worker01
+      containers:
+        - name: security-container
+          image: leesy010504/ttt-security:f0a006dbda44d8f85a4a0d24c807770f7bf5947f
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+            # ConfigMap 로딩 비활성화
+            - name: SPRING_CLOUD_KUBERNETES_ENABLED
+              value: "false"
+            # DataSource 직접 설정
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgresql:5432/security_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "security-user"
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: DB_PASSWORD
+            # Redis 설정
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            # OAuth Kakao 설정
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT-ID
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: KAKAO_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT-SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: KAKAO_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT-URI
+              value: "https://tictactalk.studio/login/oauth2/code/kakao"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION-GRANT-TYPE
+              value: "authorization_code"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT-AUTHENTICATION-METHOD
+              value: "client_secret_post"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT-NAME
+              value: "kakao"
+            # OAuth Provider 설정
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_AUTHORIZATION-URI
+              value: "https://kauth.kakao.com/oauth/authorize"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_TOKEN-URI
+              value: "https://kauth.kakao.com/oauth/token"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER-INFO-URI
+              value: "https://kapi.kakao.com/v2/user/me"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KAKAO_USER-NAME-ATTRIBUTE
+              value: "id"
+            # JWT 설정
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: JWT_SECRET
+            # NCP 설정
+            - name: NCP_ACCESS-KEY
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: NCP_ACCESS_KEY
+            - name: NCP_SECRET-KEY
+              valueFrom:
+                secretKeyRef:
+                  name: security-secret
+                  key: NCP_SECRET_KEY
+            - name: NCP_BUCKET-NAME
+              value: "ttt-profile-image"
+          ports:
+            - containerPort: 8080
