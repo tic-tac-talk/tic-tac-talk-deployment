@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chat-config
+  namespace: prod
+data:
+  application.yaml: |
+    spring:
+      application:
+        name: chat-service
+      
+      datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://postgresql:5432/chat_db
+        username: chat_user
+        password: ${DB_PASSWORD}
+      
+      jpa:
+        database: postgresql
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        generate-ddl: true
+        hibernate:
+          ddl-auto: update
+        properties:
+          hibernate:
+            show_sql: true
+            format_sql: true
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    
+    server:
+      port: 8080
+    
+    security-service:
+      url:  http://security-service.prod.svc.cluster.local:8080
+    
+    tictactalk:
+      websocket:
+        endpoint: /ws-chat
+
+    jwt:
+      secret: ${JWT_SECRET}
+
+    feign:
+      client:
+        config:
+          rag-service:
+            connectTimeout: 5000
+            readTimeout: 150000
+

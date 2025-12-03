@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: prod
+  labels:
+    app: gateway-service
+    env: prod
+data:
+  application-prod.yaml: |
+    spring:
+      config:
+        activate:
+          on-profile: prod
+      application:
+        name: apigateway-service
+      cloud:
+        gateway:
+          server:
+            webflux:
+              globalcors:
+                cors-configurations:
+                  '[/**]':
+                    allowedOrigins:
+                      - 'https://tictactalk.studio'
+                      - 'https://localhost:5173'
+                      - 'https://172.20.10.6:5173'
+                    allowedMethods: '*'
+                    allowedHeaders:
+                      - "*"
+                      - Connection
+                      - Upgrade
+                      - Sec-WebSocket-Accept
+                      - Sec-WebSocket-Key
+                      - Sec-WebSocket-Protocol
+                      - Sec-WebSocket-Version
+                    exposedHeaders:
+                      - "*"
+                    allowCredentials: true
+          routes:
+            # OAuth - 가장 먼저
+            - id: security-service-oauth
+              predicates:
+                - Path=/oauth2/authorization/**, /login/oauth2/code/**
+              uri: http://security-service.prod.svc.cluster.local:8080
+              order: 0
+
+            # Swagger API Docs
+            - id: security-service-swagger
+              predicates:
+                - Path=/api/v1/security/v3/api-docs/**, /api/v1/security/swagger-ui/**
+              filters:
+                - StripPrefix=3
+              uri: http://security-service.prod.svc.cluster.local:8080
+              order: 0
+
+            - id: voice-service-swagger
+              predicates:
+                - Path=/api/v1/voice/v3/api-docs/**, /api/v1/voice/swagger-ui/**
+              filters:
+                - StripPrefix=3
+              uri: http://voice-service.prod.svc.cluster.local:8080
+              order: 0
+
+            - id: rag-service-swagger
+              predicates:
+                - Path=/api/v1/rag/v3/api-docs/**, /api/v1/rag/swagger-ui/**
+              filters:
+                - StripPrefix=3
+              uri: http://rag-service.prod.svc.cluster.local:8080
+              order: 0
+
+            - id: chat-service-swagger
+              predicates:
+                - Path=/api/v1/chat/v3/api-docs/**, /api/v1/chat/swagger-ui/**
+              filters:
+                - StripPrefix=3
+              uri: http://chat-service.prod.svc.cluster.local:8080
+              order: 0
+
+            - id: chat-service-websocket
+              predicates:
+                - Path=/api/v1/chat/ws-chat/**
+              filters:
+                - StripPrefix=3
+              uri: ws://chat-service.prod.svc.cluster.local:8080
+              order: 0
+
+            # API Routes
+            - id: security-service
+              predicates:
+                - Path=/api/v1/security/**
+              filters:
+                - StripPrefix=2
+              uri: http://security-service.prod.svc.cluster.local:8080
+              order: 1
+
+            - id: voice-service
+              predicates:
+                - Path=/api/v1/voice/**
+              filters:
+                - StripPrefix=2
+              uri: http://voice-service.prod.svc.cluster.local:8080
+              order: 1
+
+            - id: rag-service
+              predicates:
+                - Path=/api/v1/rag/**
+              filters:
+                - StripPrefix=2
+              uri: http://rag-service.prod.svc.cluster.local:8080
+              order: 1
+
+            - id: chat-service
+              predicates:
+                - Path=/api/v1/chat/**
+              filters:
+                - StripPrefix=2
+              uri: http://chat-service.prod.svc.cluster.local:8080
+              order: 1
+
+    eureka:
+      client:
+        enabled: false
+
+    springdoc:
+      swagger-ui:
+        urls:
+          - name: Security
+            url: /api/v1/security/v3/api-docs
+          - name: Voice
+            url: /api/v1/voice/v3/api-docs
+          - name: Rag
+            url: /api/v1/rag/v3/api-docs
+          - name: Chat
+            url: /api/v1/chat/v3/api-docs
+        use-root-path: true

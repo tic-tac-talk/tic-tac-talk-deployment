@@ -7,12 +7,58 @@ metadata:
     app: security-service
     env: prod
 data:
-  REDIS_HOST: "redis-service"
-  REDIS_PORT: "6379"
-  DB_DRIVER_CLASS_NAME: "org.postgresql.Driver"
-  DB_URL: "jdbc:postgresql://postgres-service:5432/main"
-  DB_USERNAME: "root"
-  KAKAO_REDIRECT_URI: "https://tic-tac-talk.kro.kr/login/oauth2/code/kakao"
-  SERVER_PORT: "8081"
+  application.yaml: |
+    spring:
+      config:
+        activate:
+          on-profile: prod
 
+      application:
+        name: security-service
 
+      data:
+        redis:
+          host: redis
+          port: 6379
+
+      datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://postgresql:5432/security_db
+        username: security-user
+        password: ${DB_PASSWORD}
+    
+      jpa:
+        database: postgresql
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        generate-ddl: true
+        hibernate:
+          ddl-auto: update
+          show_sql: true
+          naming:
+            physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+      security:
+        oauth2:
+          client:
+            registration:
+              kakao:
+                client-id: ${KAKAO_CLIENT_ID}
+                client-secret: ${KAKAO_CLIENT_SECRET}
+                redirect-uri: https://tictactalk.studio/login/oauth2/code/kakao
+                authorization-grant-type: authorization_code
+                client-authentication-method: client_secret_post
+                client-name: kakao
+
+            provider:
+              kakao:
+                authorization-uri: https://kauth.kakao.com/oauth/authorize
+                token-uri: https://kauth.kakao.com/oauth/token
+                user-info-uri: https://kapi.kakao.com/v2/user/me
+                user-name-attribute: id
+    jwt:
+      secret: ${JWT_SECRET}
+
+    ncp:
+      access-key: ${NCP_ACCESS_KEY}
+      secret-key: ${NCP_SECRET_KEY}
+      bucket-name: ttt-profile-image

@@ -1,0 +1,41 @@
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: RunnerDeployment
+metadata:
+  name: ttt-runner
+  namespace: actions-runner-system
+spec:
+  replicas: 2
+  template:
+    spec:
+      repository: tic-tac-talk/tic-tac-talk-backend
+      labels:
+        - self-hosted
+        - k8s
+        - linux
+      
+      # Docker 대신 containerd 사용 안 함, DinD 컨테이너 사용
+      volumeMounts:
+      - name: work
+        mountPath: /runner/_work
+      - name: kube-config
+        mountPath: /root/.kube
+        readOnly: true
+      
+      volumes:
+      - name: work
+        emptyDir: {}
+      - name: kube-config
+        secret:
+          secretName: runner-kubeconfig
+      
+      # Docker-in-Docker 사용 (별도 컨테이너에서 Docker 실행)
+      dockerEnabled: true
+      dockerdWithinRunnerContainer: false
+      
+      resources:
+        limits:
+          cpu: "2000m"
+          memory: "4Gi"
+        requests:
+          cpu: "500m"
+          memory: "1Gi"

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: prod
+  labels:
+    app: gateway-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      serviceAccountName: spring-gateway-sa
+      containers:
+      - name: gateway-container
+        image: leesy010504/ttt-gateway:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 700Mi
+          limits:
+            cpu: 1000m
+            memory: 900Mi
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: prod
+        - name: SPRING_CLOUD_KUBERNETES_CONFIG_FAIL_FAST
+          value: "true"
+        - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_CONTEXT_CONFIG
+          value: DEBUG
+        - name: SPRING_CONFIG_IMPORT
+          value: 'kubernetes:,kubernetes:secrets'
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Duser.timezone=Asia/Seoul"
+        - name: TZ
+          value: "Asia/Seoul"
+        - name: SPRING_CLOUD_KUBERNETES_CONFIG_NAME
+          value: gateway-config
+        envFrom:
+        - secretRef:
+            name: gateway-secret

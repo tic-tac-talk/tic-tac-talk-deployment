@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: default
+data:
+  config.yml: |
+    protocol: http2
+    
+    ingress:
+      - hostname: grafana.tictactalk.studio
+        service: http://monitoring-grafana.monitoring.svc.cluster.local:80
+
+      - hostname: tictactalk.studio
+        service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+      
+      - hostname: www.tictactalk.studio
+        service: http://gateway-service.prod.svc.cluster.local:8080
+      
+      - hostname: api.tictactalk.studio
+        service: http://gateway-service.prod.svc.cluster.local:8080
+      
+      - service: http_status:404
