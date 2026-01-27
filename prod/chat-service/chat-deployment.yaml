@@ -1,24 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: security-deployment
+  name: chat-deployment
   namespace: prod
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: security-service
+      app: chat-service
   template:
     metadata:
       labels:
-        app: security-service
+        app: chat-service
     spec:
-      serviceAccountName: security-sa
+      serviceAccountName: chat-sa
       securityContext:
         fsGroup: 2000
       containers:
-        - name: security-container
-          image: leesy010504/ttt-security:latest
+        - name: chat-container
+          image: leesy010504/ttt-chat:2af68d49c432e708be5de5c88a03b70e41886b3e
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 300m
@@ -36,9 +37,9 @@ spec:
             - name: SPRING_CONFIG_IMPORT
               value: "kubernetes:,kubernetes:secrets"
             - name: SPRING_CLOUD_KUBERNETES_CONFIG_NAME
-              value: "security-config"
+              value: "chat-config"
           envFrom:
             - secretRef:
-                name: security-secret
+                name: chat-secret
           ports:
             - containerPort: 8080

@@ -1,0 +1,39 @@
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: RunnerDeployment
+metadata:
+  name: ttt-runner
+  namespace: actions-runner-system
+spec:
+  replicas: 2
+  template:
+    spec:
+      repository: tic-tac-talk/tic-tac-talk-backend
+      
+      labels:
+        - self-hosted
+        - k8s
+        - linux
+      
+      volumeMounts:
+      - name: docker-sock
+        mountPath: /var/run/docker.sock
+      - name: kube-config
+        mountPath: /root/.kube
+        readOnly: true
+      
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: kube-config
+        secret:
+          secretName: runner-kubeconfig
+      
+      resources:
+        limits:
+          cpu: "2000m"
+          memory: "4Gi"
+        requests:
+          cpu: "500m"
+          memory: "1Gi"

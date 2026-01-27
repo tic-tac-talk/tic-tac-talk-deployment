@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-config
+  namespace: prod
+  labels:
+    app: rag-service
+    env: prod
+data:
+  application-prod.yaml: |
+    spring:
+      config:
+        activate:
+          on-profile: prod
+
+      application:
+        name: rag-service
+
+      datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://postgresql:5432/rag_db
+        username: rag-user
+        password: ${DB_PASSWORD}
+
+      jpa:
+        database: postgresql
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        generate-ddl: true
+        hibernate:
+          ddl-auto: update
+          show_sql: true
+          naming:
+            physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+      ai:
+        openai:
+          api-key: ${OPENAI_API_KEY}
+          chat:
+            options:
+              model: gpt-5.1
+              max_completion_tokens: 12000
+              temperature: 1
